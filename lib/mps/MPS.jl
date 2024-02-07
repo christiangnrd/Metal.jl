@@ -25,6 +25,8 @@ include("size.jl")
 include("command_buf.jl")
 include("kernel.jl")
 include("images.jl")
+
+include("conv.jl")
 include("matrix.jl")
 include("vector.jl")
 include("decomposition.jl")
