@@ -15,80 +15,11 @@ function MPSCNNKernel(device)
     @objc [obj::id{MPSCNNKernel} initWithDevice:device::id{MTLDevice}]::id{MPSCNNKernel}
     return obj
 end
-# function MPSCNNKernel(aDecoder, device)
-# kernel = @objc [MPSCNNKernel alloc]::id{MPSCNNKernel}
-#     obj = MPSCNNKernel(kernel)
-#     finalizer(release, obj)
-#     @objc [obj::id{MPSCNNKernel} initWithCoder:Ptr(aDecoder)::Ptr{NSCoder}
-#                                     device:device::id{MTLDevice}]::id{MPSCNNKernel}
 
-#     obj = MPSCNNKernel(kernel)
-#     finalizer(release, obj)
-#     return obj
-# end
-
-@cenum MPSCNNNeuronType::Int32 begin
-    MPSCNNNeuronTypeNone        = 0
-    MPSCNNNeuronTypeReLU        = 1
-    MPSCNNNeuronTypeLinear      = 2
-    MPSCNNNeuronTypeSigmoid     = 3
-    MPSCNNNeuronTypeHardSigmoid = 4
-    MPSCNNNeuronTypeTanH        = 5
-    MPSCNNNeuronTypeAbsolute    = 6
-    MPSCNNNeuronTypeSoftPlus    = 7
-    MPSCNNNeuronTypeSodtSign    = 8
-    MPSCNNNeuronTypeELU         = 9
-    MPSCNNNeuronTypeCount       = 16
-    MPSCNNNeuronTypeExponential = 13
-    MPSCNNNeuronTypeGeLU        = 15
-    MPSCNNNeuronTypeLogarithm   = 14
-    MPSCNNNeuronTypePReLU       = 10
-    MPSCNNNeuronTypePower       = 12
-    MPSCNNNeuronTypePowerReLUN  = 11
-end
-
-@objcwrapper immutable=false MPSNNNeuronDescriptor <: NSObject
-
-@objcproperties MPSNNNeuronDescriptor begin
-    @autoproperty a::Float32
-    @autoproperty b::Float32
-    @autoproperty c::Float32
-    # @autoproperty data::Ptr{NSData}
-    @autoproperty neuronType::MPSCNNNeuronType
-end
-function MPSNNNeuronDescriptor(neuronType)
-    desc = @objc [MPSNNNeuronDescriptor cnnNeuronDescriptorWithType:neuronType::MPSCNNNeuronType]::id{MPSNNNeuronDescriptor}
-
-    obj = MPSNNNeuronDescriptor(desc)
-    finalizer(release, obj)
-    return obj
-end
-function MPSNNNeuronDescriptor(neuronType, a)
-    desc = @objc [MPSNNNeuronDescriptor cnnNeuronDescriptorWithType:neuronType::MPSCNNNeuronType
-                                    a:a::Float32]::id{MPSNNNeuronDescriptor}
-
-    obj = MPSNNNeuronDescriptor(desc)
-    finalizer(release, obj)
-    return obj
-end
-function MPSNNNeuronDescriptor(neuronType, a, b)
-    desc = @objc [MPSNNNeuronDescriptor cnnNeuronDescriptorWithType:neuronType::MPSCNNNeuronType
-                                    a:a::Float32
-                                    b:b::Float32]::id{MPSNNNeuronDescriptor}
-
-    obj = MPSNNNeuronDescriptor(desc)
-    finalizer(release, obj)
-    return obj
-end
-function MPSNNNeuronDescriptor(neuronType, a, b, c)
-    desc = @objc [MPSNNNeuronDescriptor cnnNeuronDescriptorWithType:neuronType::MPSCNNNeuronType
-                                    a:a::Float32
-                                    b:b::Float32
-                                    c:c::Float32]::id{MPSNNNeuronDescriptor}
-
-    obj = MPSNNNeuronDescriptor(desc)
-    finalizer(release, obj)
-    return obj
+function encode!(cmdbuf::MTLCommandBuffer, kernel::K, sourceTexture, destinationTexture) where {K<:MPSCNNKernel}
+    @objc [kernel::id{K} encodeToCommandBuffer:cmdbuf::id{MTLCommandBuffer}
+                                     sourceTexture:sourceTexture::id{MTLTexture}
+                                     destinationTexture:destinationTexture::id{MTLTexture}]::Nothing
 end
 
 # Missing PRelu MPSNNNeuronDescriptor constructor
@@ -156,4 +87,48 @@ function MPSCNNConvolution(device)
     finalizer(release, obj)
     @objc [obj::id{MPSCNNConvolution} initWithDevice:device::id{MTLDevice}]::id{MPSCNNConvolution}
     return obj
+end
+
+#####################
+### Testing stuff ###
+#####################
+
+function testMPSCNNKernel(kernel::K, image, pixelFormat) where K<:MPSCNNKernel
+
+    res = copy(image)
+
+    h,w = size(image)
+
+    alignment = MTL.minimumLinearTextureAlignmentForPixelFormat(current_device(), pixelFormat)
+    preBytesPerRow = sizeof(eltype(image))*w
+
+    rowoffset = alignment - (preBytesPerRow - 1) % alignment - 1
+    bytesPerRow = preBytesPerRow + rowoffset
+    offset = (rowoffset * h) % bytesPerRow
+
+    @show Int(alignment)
+    @show Int(preBytesPerRow)
+    @show Int(rowoffset)
+    @show Int(bytesPerRow)
+    @show Int(offset)
+
+    textDesc1 = MTLTextureDescriptor(pixelFormat, w, h)
+    textDesc1.usage = MTL.MTLTextureUsageShaderRead | MTL.MTLTextureUsageShaderWrite
+    text1 = MTL.MTLTexture(image.data.rc.obj, textDesc1, 0, bytesPerRow)
+    img1 = MPSImage(text1, 4)
+
+    textDesc2 = MTLTextureDescriptor(pixelFormat, w, h)
+    textDesc2.usage = MTL.MTLTextureUsageShaderRead | MTL.MTLTextureUsageShaderWrite
+    text2 = MTL.MTLTexture(res.data.rc.obj, textDesc2, 0, bytesPerRow)
+    img2 = MPSImage(text2, 4)
+
+    cmdbuf = MTLCommandBuffer(global_queue(current_device()))
+    # encode!(cmdbuf, kernel, text1)
+    # encode!(cmdbuf, kernel, img1, img2)
+    @objc [kernel::id{K} encodeToCommandBuffer:cmdbuf::id{MTLCommandBuffer}
+                                     sourceImage:img1::id{MPSImage}
+                                     destinationImage:img2::id{MPSImage}]::Nothing
+    commit!(cmdbuf)
+    synchronize()
+    return res
 end
