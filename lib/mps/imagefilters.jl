@@ -48,6 +48,38 @@ for dim in (:Row, :Column), func in (:Max, :Min, :Sum, :Mean)
     end
 end
 
+############################
+# Image Arithmetic Filters #
+############################
+
+@objcwrapper immutable=false MPSImageArithmetic <: MPSBinaryImageKernel
+
+@objcproperties MPSImageArithmetic begin
+    @autoproperty bias::Float32 setter=setBias
+    @autoproperty primaryScale::Float32 setter=setPrimaryScale
+    @autoproperty primaryStrideInPixels::MTLSize setter=setPrimaryStrideInPixels
+    @autoproperty secondaryScale::Float32 setter=setSecondaryScale
+    @autoproperty secondaryStrideInPixels::MTLSize setter=setSecondaryStrideInPixels
+    @autoproperty minimumValue::Float32 setter=setMinimumValue
+    @autoproperty maximumValue::Float32 setter=setMaximumValue
+end
+
+# Implement the MPSImageArithmetic kernels
+for func in (:Add, :Subtract, :Multiply, :Divide)
+    fullfunc = Symbol(:MPSImage, func)
+    @eval begin
+        @objcwrapper immutable=false $fullfunc <: MPSImageArithmetic
+
+        function $fullfunc(device)
+            kernel = @objc [$fullfunc alloc]::id{$fullfunc}
+            obj = $fullfunc(kernel)
+            finalizer(release, obj)
+            @objc [obj::id{$fullfunc} initWithDevice:device::id{MTLDevice}]::id{$fullfunc}
+            return obj
+        end
+    end
+end
+
 ###########################################
 # High-level functions for image blurring #
 ###########################################
