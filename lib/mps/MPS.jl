@@ -27,9 +27,12 @@ include("command_buf.jl")
 include("kernel.jl")
 include("images.jl")
 
-include("conv.jl")
+include("neuralnets/neuron.jl")
+include("neuralnets/conv.jl")
+include("neuralnets/reduce.jl")
 include("matrix.jl")
 include("vector.jl")
+include("matrixkernels.jl")
 include("decomposition.jl")
 include("copy.jl")
 
