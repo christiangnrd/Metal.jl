@@ -57,6 +57,41 @@ for dim in (:Row, :Column), func in (:Max, :Min, :Sum, :Mean)
     end
 end
 
+
+## image arithmetic filters
+
+@objcwrapper immutable=false MPSImageArithmetic <: MPSBinaryImageKernel
+
+@objcproperties MPSImageArithmetic begin
+    @autoproperty bias::Float32 setter=setBias
+    @autoproperty primaryScale::Float32 setter=setPrimaryScale
+    @autoproperty primaryStrideInPixels::MTLSize setter=setPrimaryStrideInPixels
+    @autoproperty secondaryScale::Float32 setter=setSecondaryScale
+    @autoproperty secondaryStrideInPixels::MTLSize setter=setSecondaryStrideInPixels
+    @autoproperty minimumValue::Float32 setter=setMinimumValue
+    @autoproperty maximumValue::Float32 setter=setMaximumValue
+end
+
+# Implement the MPSImageArithmetic kernels
+for func in (:Add, :Subtract, :Multiply, :Divide)
+    fullfunc = Symbol(:MPSImage, func)
+    @eval begin
+        export $fullfunc
+
+        @objcwrapper immutable=false $fullfunc <: MPSImageArithmetic
+    end
+    @eval begin
+        function $fullfunc(dev)
+            kernel = @objc [$fullfunc alloc]::id{$fullfunc}
+            obj = $fullfunc(kernel)
+            finalizer(release, obj)
+            @objc [obj::id{$fullfunc} initWithDevice:dev::id{MTLDevice}]::id{$fullfunc}
+            return obj
+        end
+    end
+end
+
+
 ## high-level blurring functionality
 
 function unaryfilter(kernel, image; pixelFormat=MTL.MTLPixelFormatRGBA8Unorm, async=false)
