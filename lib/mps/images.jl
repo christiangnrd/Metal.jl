@@ -9,7 +9,7 @@ end
 @objcwrapper immutable=false MPSUnaryImageKernel <: MPSKernel
 
 @objcproperties MPSUnaryImageKernel begin
-    @autoproperty offset::MPSOffset
+    @autoproperty offset::MPSOffset setter=setOffset
     @autoproperty clipRect::MTLRegion
     @autoproperty edgeMode::MPSImageEdgeMode setter=setEdgeMode
 end
@@ -30,9 +30,16 @@ end
 @objcwrapper immutable=false MPSBinaryImageKernel <: MPSKernel
 
 @objcproperties MPSBinaryImageKernel begin
-    @autoproperty primaryOffset::MPSOffset
-    @autoproperty secondaryOffset::MPSOffset
+    @autoproperty primaryOffset::MPSOffset setter=setPrimaryOffset
+    @autoproperty secondaryOffset::MPSOffset setter=setSecondaryOffset
     @autoproperty primaryEdgeMode::MPSImageEdgeMode
     @autoproperty secondaryEdgeMode::MPSImageEdgeMode
     @autoproperty clipRect::MTLRegion
+end
+
+function encode!(cmdbuf::MTLCommandBuffer, kernel::K, primaryTexture::MTLTexture, secondaryTexture::MTLTexture, destinationTexture::MTLTexture) where {K<:MPSBinaryImageKernel}
+    @objc [kernel::id{K} encodeToCommandBuffer:cmdbuf::id{MTLCommandBuffer}
+                                     primaryTexture:primaryTexture::id{MTLTexture}
+                                     secondaryTexture:secondaryTexture::id{MTLTexture}
+                                     destinationTexture:destinationTexture::id{MTLTexture}]::Nothing
 end
