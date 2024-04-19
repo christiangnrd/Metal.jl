@@ -1,3 +1,109 @@
+## morphological image filters
+
+# The following two filter definitions are defined with the MPSImageBox-like filters
+@objcwrapper immutable=false MPSImageAreaMax <: MPSUnaryImageKernel
+@objcwrapper immutable=false MPSImageAreaMin <: MPSImageAreaMax
+
+# Also defines MPSImageAreaMin properties
+@objcproperties MPSImageAreaMax begin
+    @autoproperty kernelHeight::Int
+    @autoproperty kernelWidth::Int
+end
+
+
+@objcwrapper immutable=false MPSImageDilate <: MPSUnaryImageKernel
+@objcwrapper immutable=false MPSImageErode <: MPSImageDilate
+
+# Also defines MPSImageErode properties
+@objcproperties MPSImageDilate begin
+    @autoproperty kernelHeight::Int
+    @autoproperty kernelWidth::Int
+end
+
+for filt in (:MPSImageDilate, :MPSImageErode)
+    @eval begin
+        $(filt)(dev::MTLDevice, kernelWidth::Integer, kernelHeight::Integer, values::AbstractMatrix{Float32}) =
+            $(filt)(dev, kernelWidth, kernelHeight, view(values,:))
+        function $(filt)(dev::MTLDevice, kernelWidth::Integer, kernelHeight::Integer, values::AbstractVector{Float32})
+            _check_kernel_size(kernelHeight, kernelWidth)
+            kernel = @objc [$filt alloc]::id{$filt}
+            obj = $(filt)(kernel)
+            finalizer(release, obj)
+            @objc [obj::id{$filt} initWithDevice:dev::id{MTLDevice}
+                                        kernelWidth:kernelWidth::Int
+                                        kernelHeight:kernelHeight::Int
+                                        values:values::Vector{Float32}]::id{$filt}
+            return obj
+        end
+    end
+end
+
+## convolution image filters
+
+export MPSImageConvolution
+
+@objcwrapper immutable=false MPSImageConvolution <: MPSUnaryImageKernel
+
+@objcproperties MPSImageConvolution begin
+    @autoproperty kernelHeight::Int
+    @autoproperty kernelWidth::Int
+    @autoproperty bias::Float32
+end
+
+MPSImageConvolution(dev::MTLDevice, kernelWidth::Integer, kernelHeight::Integer, weights::AbstractMatrix{Float32}) =
+    MPSImageConvolution(dev, kernelWidth, kernelHeight, view(weights,:))
+function MPSImageConvolution(dev::MTLDevice, kernelWidth::Integer, kernelHeight::Integer, weights::AbstractVector{Float32})
+    _check_kernel_size(kernelHeight, kernelWidth)
+    kernel = @objc [MPSImageConvolution alloc]::id{MPSImageConvolution}
+    obj = MPSImageConvolution(kernel)
+    finalizer(release, obj)
+    @objc [obj::id{MPSImageConvolution} initWithDevice:dev::id{MTLDevice}
+                                kernelWidth:kernelWidth::Int
+                                kernelHeight:kernelHeight::Int
+                                weights:weights::Vector{Float32}]::id{MPSImageConvolution}
+    return obj
+end
+
+export MPSImageMedian
+
+@objcwrapper immutable=false MPSImageMedian <: MPSUnaryImageKernel
+
+@objcproperties MPSImageMedian begin
+    @autoproperty kernelDiameter::Int
+end
+
+function MPSImageMedian(dev::MTLDevice, kernelDiameter::Integer)
+    _check_kernel_diameter(kernelDiameter)
+    kernel = @objc [MPSImageMedian alloc]::id{MPSImageMedian}
+    obj = MPSImageMedian(kernel)
+    finalizer(release, obj)
+    @objc [obj::id{MPSImageMedian} initWithDevice:dev::id{MTLDevice}
+                                kernelDiameter:kernelDiameter::Int]::id{MPSImageMedian}
+    return obj
+end
+maxKernelDiameter() = @objc [MPSImageMedian maxKernelDiameter]::Int
+minKernelDiameter() = @objc [MPSImageMedian minKernelDiameter]::Int
+
+
+@objcwrapper immutable=false MPSImageBox <: MPSUnaryImageKernel
+@objcwrapper immutable=false MPSImageTent <: MPSImageBox
+for filt in (:MPSImageBox, :MPSImageTent, :MPSImageAreaMin, :MPSImageAreaMax)
+    @eval begin
+        export $filt
+
+        function $(filt)(dev::MTLDevice, kernelWidth::Integer, kernelHeight::Integer)
+            _check_kernel_size(kernelHeight, kernelWidth)
+            kernel = @objc [$filt alloc]::id{$filt}
+            obj = $(filt)(kernel)
+            finalizer(release, obj)
+            @objc [obj::id{$filt} initWithDevice:dev::id{MTLDevice}
+                                        kernelWidth:kernelWidth::Int
+                                        kernelHeight:kernelHeight::Int]::id{$filt}
+            return obj
+        end
+    end
+end
+
 ## gaussian blur
 
 export MPSImageGaussianBlur
@@ -13,22 +119,6 @@ function MPSImageGaussianBlur(dev::MTLDevice, sigma::Real)
     return obj
 end
 
-
-## image box
-
-export MPSImageBox
-
-@objcwrapper immutable=false MPSImageBox <: MPSUnaryImageKernel
-
-function MPSImageBox(dev, kernelWidth, kernelHeight)
-    kernel = @objc [MPSImageBox alloc]::id{MPSImageBox}
-    obj = MPSImageBox(kernel)
-    finalizer(release, obj)
-    @objc [obj::id{MPSImageBox} initWithDevice:dev::id{MTLDevice}
-                                kernelWidth:kernelWidth::Int
-                                kernelHeight:kernelHeight::Int]::id{MPSImageBox}
-    return obj
-end
 
 ## image reduction filters #
 
