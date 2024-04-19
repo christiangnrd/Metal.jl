@@ -17,3 +17,10 @@ end
 #                                      inPlaceTexture:inPlaceTexture::id{MTLTexture}
 #                                      fallbackCopyAllocator:copyAllocator::MPSCopyAllocator]::Bool
 # end
+
+function encode!(cmdbuf::MTLCommandBuffer, kernel::K, primaryTexture::MTLTexture, secondaryTexture::MTLTexture, destinationTexture::MTLTexture) where {K<:MPSBinaryImageKernel}
+    @objc [kernel::id{K} encodeToCommandBuffer:cmdbuf::id{MTLCommandBuffer}
+                                     primaryTexture:primaryTexture::id{MTLTexture}
+                                     secondaryTexture:secondaryTexture::id{MTLTexture}
+                                     destinationTexture:destinationTexture::id{MTLTexture}]::Nothing
+end
