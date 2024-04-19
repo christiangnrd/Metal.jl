@@ -33,7 +33,7 @@ end
 
 ## high-level blurring functionality
 
-function blur(image, kernel; pixelFormat=MTL.MTLPixelFormatRGBA8Unorm)
+function unaryfilter(kernel, image; pixelFormat=MTL.MTLPixelFormatRGBA8Unorm, async=false)
     res = copy(image)
 
     w,h = size(image)
@@ -56,15 +56,49 @@ function blur(image, kernel; pixelFormat=MTL.MTLPixelFormatRGBA8Unorm)
     encode!(cmdbuf, kernel, text1, text2)
     commit!(cmdbuf)
 
+    async || wait_completed(cmdbuf)
+
     return res
 end
 
-function gaussianblur(image; sigma, pixelFormat=MTL.MTLPixelFormatRGBA8Unorm)
-    kernel = MPSImageGaussianBlur(device(), sigma)
-    return blur(image, kernel; pixelFormat)
+function binaryfilter(kernel, image1, image2; pixelFormat=MTL.MTLPixelFormatRGBA8Unorm, async=false)
+    res = copy(image1)
+
+    w,h = size(image1)
+
+    alignment = MTL.minimumLinearTextureAlignmentForPixelFormat(current_device(), pixelFormat)
+    preBytesPerRow = sizeof(eltype(image1))*w
+
+    rowoffset = alignment - (preBytesPerRow - 1) % alignment - 1
+    bytesPerRow = preBytesPerRow + rowoffset
+
+    textDesc1 = MTLTextureDescriptor(pixelFormat, w, h)
+    textDesc1.usage = MTL.MTLTextureUsageShaderRead | MTL.MTLTextureUsageShaderWrite
+    text1 = MTL.MTLTexture(image1.data.rc.obj, textDesc1, 0, bytesPerRow)
+
+    textDesc2 = MTLTextureDescriptor(pixelFormat, w, h)
+    textDesc2.usage = MTL.MTLTextureUsageShaderRead | MTL.MTLTextureUsageShaderWrite
+    text2 = MTL.MTLTexture(image2.data.rc.obj, textDesc2, 0, bytesPerRow)
+
+    textDesc3 = MTLTextureDescriptor(pixelFormat, w, h)
+    textDesc3.usage = MTL.MTLTextureUsageShaderRead | MTL.MTLTextureUsageShaderWrite
+    text3 = MTL.MTLTexture(res.data.rc.obj, textDesc3, 0, bytesPerRow)
+
+    cmdbuf = MTLCommandBuffer(global_queue(current_device()))
+    encode!(cmdbuf, kernel, text1, text2, text3)
+    commit!(cmdbuf)
+
+    async || wait_completed(cmdbuf)
+
+    return res
 end
 
-function boxblur(image, kernelWidth, kernelHeight; pixelFormat=MTL.MTLPixelFormatRGBA8Unorm)
+function gaussianblur(image; sigma, kwargs...)
+    kernel = MPSImageGaussianBlur(device(), sigma)
+    return unaryfilter(kernel, image; kwargs...)
+end
+
+function boxblur(image, kernelWidth, kernelHeight; kwargs...)
     kernel = MPSImageBox(device(), kernelWidth, kernelHeight)
-    return blur(image, kernel; pixelFormat)
+    return unaryfilter(kernel, image; kwargs...)
 end
