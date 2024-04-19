@@ -22,8 +22,35 @@ function MPSImageBox(device, kernelWidth, kernelHeight)
     return obj
 end
 
+###########################
+# Image Reduction Filters #
+###########################
 
-# High-level functions for image blurring
+@objcwrapper immutable=false MPSImageReduceUnary <: MPSUnaryImageKernel
+
+@objcproperties MPSImageReduceUnary begin
+    @autoproperty clipRect::MTLRegion
+end
+
+# Implement the MPSImageReduce kernels
+for dim in (:Row, :Column), func in (:Max, :Min, :Sum, :Mean)
+    fullfunc = Symbol(:MPSImageReduce, dim, func)
+    @eval begin
+        @objcwrapper immutable=false $fullfunc <: MPSImageReduceUnary
+
+        function $fullfunc(device)
+            kernel = @objc [$fullfunc alloc]::id{$fullfunc}
+            obj = $fullfunc(kernel)
+            finalizer(release, obj)
+            @objc [obj::id{$fullfunc} initWithDevice:device::id{MTLDevice}]::id{$fullfunc}
+            return obj
+        end
+    end
+end
+
+###########################################
+# High-level functions for image blurring #
+###########################################
 
 function blur(image, kernel; pixelFormat=MTL.MTLPixelFormatRGBA8Unorm)
     res = copy(image)
