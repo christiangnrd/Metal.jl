@@ -142,9 +142,9 @@ using .MPS: MPSMatrixMultiplication
                                         alpha, beta)
 
     @test mat_mul isa MPSMatrixMultiplication
-    @test mat_mul.leftMatrixOrigin == MTLOrigin(0, 0, 0)
-    @test mat_mul.rightMatrixOrigin == MTLOrigin(0, 0, 0)
-    @test mat_mul.resultMatrixOrigin == MTLOrigin(0, 0, 0)
+    @test mat_mul.leftMatrixOrigin == MTL.MTLOrigin(0, 0, 0)
+    @test mat_mul.rightMatrixOrigin == MTL.MTLOrigin(0, 0, 0)
+    @test mat_mul.resultMatrixOrigin == MTL.MTLOrigin(0, 0, 0)
     @test mat_mul.batchSize == typemax(UInt)
     @test mat_mul.batchStart == typemin(UInt)
 
