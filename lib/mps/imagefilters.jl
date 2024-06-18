@@ -24,14 +24,14 @@ end
 
 for filt in (:MPSImageDilate, :MPSImageErode)
     @eval begin
-        $(filt)(device::MTLDevice, kernelWidth::Integer, kernelHeight::Integer, values::AbstractMatrix{Float32}) =
-            $(filt)(device, kernelWidth, kernelHeight, view(values,:))
-        function $(filt)(device::MTLDevice, kernelWidth::Integer, kernelHeight::Integer, values::AbstractVector{Float32})
+        $(filt)(dev::MTLDevice, kernelWidth::Integer, kernelHeight::Integer, values::AbstractMatrix{Float32}) =
+            $(filt)(dev, kernelWidth, kernelHeight, view(values,:))
+        function $(filt)(dev::MTLDevice, kernelWidth::Integer, kernelHeight::Integer, values::AbstractVector{Float32})
             _check_kernel_size(kernelHeight, kernelWidth)
             kernel = @objc [$(filt) alloc]::id{$(filt)}
             obj = $(filt)(kernel)
             finalizer(release, obj)
-            @objc [obj::id{$(filt)} initWithDevice:device::id{MTLDevice}
+            @objc [obj::id{$(filt)} initWithDevice:dev::id{MTLDevice}
                                         kernelWidth:kernelWidth::Int
                                         kernelHeight:kernelHeight::Int
                                         values:values::Vector{Float32}]::id{$(filt)}
@@ -52,14 +52,14 @@ end
     @autoproperty bias::Float32
 end
 
-MPSImageConvolution(device::MTLDevice, kernelWidth::Integer, kernelHeight::Integer, weights::AbstractMatrix{Float32}) =
-    MPSImageConvolution(device, kernelWidth, kernelHeight, view(weights,:))
-function MPSImageConvolution(device::MTLDevice, kernelWidth::Integer, kernelHeight::Integer, weights::AbstractVector{Float32})
+MPSImageConvolution(dev::MTLDevice, kernelWidth::Integer, kernelHeight::Integer, weights::AbstractMatrix{Float32}) =
+    MPSImageConvolution(dev, kernelWidth, kernelHeight, view(weights,:))
+function MPSImageConvolution(dev::MTLDevice, kernelWidth::Integer, kernelHeight::Integer, weights::AbstractVector{Float32})
     _check_kernel_size(kernelHeight, kernelWidth)
     kernel = @objc [MPSImageConvolution alloc]::id{MPSImageConvolution}
     obj = MPSImageConvolution(kernel)
     finalizer(release, obj)
-    @objc [obj::id{MPSImageConvolution} initWithDevice:device::id{MTLDevice}
+    @objc [obj::id{MPSImageConvolution} initWithDevice:dev::id{MTLDevice}
                                 kernelWidth:kernelWidth::Int
                                 kernelHeight:kernelHeight::Int
                                 weights:weights::Vector{Float32}]::id{MPSImageConvolution}
@@ -72,12 +72,12 @@ end
     @autoproperty kernelDiameter::Int
 end
 
-function MPSImageMedian(device::MTLDevice, kernelDiameter::Integer)
+function MPSImageMedian(dev::MTLDevice, kernelDiameter::Integer)
     _check_kernel_diameter(kernelDiameter)
     kernel = @objc [MPSImageMedian alloc]::id{MPSImageMedian}
     obj = MPSImageMedian(kernel)
     finalizer(release, obj)
-    @objc [obj::id{MPSImageMedian} initWithDevice:device::id{MTLDevice}
+    @objc [obj::id{MPSImageMedian} initWithDevice:dev::id{MTLDevice}
                                 kernelDiameter:kernelDiameter::Int]::id{MPSImageMedian}
     return obj
 end
@@ -89,12 +89,12 @@ minKernelDiameter() = @objc [MPSImageMedian minKernelDiameter]::Int
 @objcwrapper immutable=false MPSImageTent <: MPSImageBox
 for filt in (:MPSImageBox, :MPSImageTent, :MPSImageAreaMin, :MPSImageAreaMax)
     @eval begin
-        function $(filt)(device::MTLDevice, kernelWidth::Integer, kernelHeight::Integer)
+        function $(filt)(dev::MTLDevice, kernelWidth::Integer, kernelHeight::Integer)
             _check_kernel_size(kernelHeight, kernelWidth)
             kernel = @objc [$(filt) alloc]::id{$(filt)}
             obj = $(filt)(kernel)
             finalizer(release, obj)
-            @objc [obj::id{$(filt)} initWithDevice:device::id{MTLDevice}
+            @objc [obj::id{$(filt)} initWithDevice:dev::id{MTLDevice}
                                         kernelWidth:kernelWidth::Int
                                         kernelHeight:kernelHeight::Int]::id{$(filt)}
             return obj
@@ -104,11 +104,11 @@ end
 
 @objcwrapper immutable=false MPSImageGaussianBlur <: MPSUnaryImageKernel
 
-function MPSImageGaussianBlur(device::MTLDevice, sigma::Real)
+function MPSImageGaussianBlur(dev::MTLDevice, sigma::Real)
     kernel = @objc [MPSImageGaussianBlur alloc]::id{MPSImageGaussianBlur}
     obj = MPSImageGaussianBlur(kernel)
     finalizer(release, obj)
-    @objc [obj::id{MPSImageGaussianBlur} initWithDevice:device::id{MTLDevice}
+    @objc [obj::id{MPSImageGaussianBlur} initWithDevice:dev::id{MTLDevice}
                                   sigma:sigma::Float32]::id{MPSImageGaussianBlur}
     return obj
 end
@@ -129,11 +129,11 @@ for dim in (:Row, :Column), func in (:Max, :Min, :Sum, :Mean)
     @eval begin
         @objcwrapper immutable=false $fullfunc <: MPSImageReduceUnary
 
-        function $fullfunc(device)
+        function $fullfunc(dev)
             kernel = @objc [$fullfunc alloc]::id{$fullfunc}
             obj = $fullfunc(kernel)
             finalizer(release, obj)
-            @objc [obj::id{$fullfunc} initWithDevice:device::id{MTLDevice}]::id{$fullfunc}
+            @objc [obj::id{$fullfunc} initWithDevice:dev::id{MTLDevice}]::id{$fullfunc}
             return obj
         end
     end
@@ -161,11 +161,11 @@ for func in (:Add, :Subtract, :Multiply, :Divide)
     @eval begin
         @objcwrapper immutable=false $fullfunc <: MPSImageArithmetic
 
-        function $fullfunc(device)
+        function $fullfunc(dev)
             kernel = @objc [$fullfunc alloc]::id{$fullfunc}
             obj = $fullfunc(kernel)
             finalizer(release, obj)
-            @objc [obj::id{$fullfunc} initWithDevice:device::id{MTLDevice}]::id{$fullfunc}
+            @objc [obj::id{$fullfunc} initWithDevice:dev::id{MTLDevice}]::id{$fullfunc}
             return obj
         end
     end
