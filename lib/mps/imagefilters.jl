@@ -1,3 +1,14 @@
+@inline function _check_kernel_size(kernelHeight, kernelWidth)
+    (kernelWidth % 2 != 0 && kernelHeight % 2 != 0) ||
+        throw(ArgumentError(lazy"kernel width ($(kernelWidth)) and kernel height ($(kernelHeight)) must both be odd numbers."))
+    return
+end
+@inline function _check_kernel_diameter(kernelDiameter)
+    (kernelDiameter % 2 != 0) ||
+        throw(ArgumentError(lazy"kernelDiameter ($(kernelDiameter)) must be an odd value."))
+    return
+end
+
 ## morphological image filters
 
 # The following two filter definitions are defined with the MPSImageBox-like filters
@@ -22,6 +33,8 @@ end
 
 for filt in (:MPSImageDilate, :MPSImageErode)
     @eval begin
+        export $filt
+
         $(filt)(dev::MTLDevice, kernelWidth::Integer, kernelHeight::Integer, values::AbstractMatrix{Float32}) =
             $(filt)(dev, kernelWidth, kernelHeight, view(values,:))
         function $(filt)(dev::MTLDevice, kernelWidth::Integer, kernelHeight::Integer, values::AbstractVector{Float32})
