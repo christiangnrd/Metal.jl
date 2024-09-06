@@ -18,6 +18,8 @@ import GPUArrays
 
 const MtlFloat = Union{Float32, Float16}
 
+const MPSShape = NSArray#{NSNumber}
+
 is_supported(dev::MTLDevice) = ccall(:MPSSupportsMTLDevice, Bool, (id{MTLDevice},), dev)
 
 # Load in generated enums and structs
