@@ -23,10 +23,10 @@ end
 
 @objcproperties MPSGraphDevice begin
     @autoproperty type::MPSGraphDeviceType
-    @autoproperty metalDevice::id{MTLDevice} # Not doable yet as MPSShape is NSArray of NSNumber
+    @autoproperty metalDevice::id{MTLDevice}
 end
 
 function MPSGraphDevice(device::MTLDevice)
-    dev = @objc [MPSGraphDevice deviceWithMTLDevice:metalDevice::id{MTLDevice}]::id{MPSGraphDevice}
-    MPSGraphDevice(dev)
+    obj = @objc [MPSGraphDevice deviceWithMTLDevice:device::id{MTLDevice}]::id{MPSGraphDevice}
+    MPSGraphDevice(obj)
 end
