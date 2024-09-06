@@ -22,7 +22,7 @@ end
 @objcwrapper MPSGraphDevice <: MPSGraphType
 
 @objcproperties MPSGraphDevice begin
-    @autoproperty type::MPSGraphDeviceType setter=setDeviceType
+    @autoproperty type::MPSGraphDeviceType
     @autoproperty metalDevice::id{MTLDevice} # Not doable yet as MPSShape is NSArray of NSNumber
 end
 
