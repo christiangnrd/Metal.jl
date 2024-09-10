@@ -10,13 +10,20 @@
 @objcwrapper MPSGraphShapedType <: MPSGraphType
 
 @objcproperties MPSGraphShapedType begin
-    # @autoproperty shape::id{MPSShape} # Not doable yet as MPSShape is NSArray of NSNumber
+    # @autoproperty shape::id{MPSShape} setter=setShape # Not doable yet as MPSShape is NSArray of NSNumber
     @autoproperty dataType::MPSDataType setter=setDataType
 end
 
-# function MPSGraphShapedType(shape::MPSShape)
-#     TODO
-# end
+function MPSGraphShapedType(shape::MPSShape)
+    tmp = @objc [MPSGraphShapedType alloc]::id{MPSGraphShapedType}
+    obj = MPSGraphShapedType(tmp)
+    finalizer(release, obj)
+    # @objc [MPSGraphShapedType initWithShape:shape::id{MPSShape}
+    @objc [obj::id{MPSGraphShapedType} initWithShape:shape::id{MPSShape}
+                                       dataType:dataType::MPSDataType]::id{MPSGraphShapedType}
+
+   return obj
+end
 
 ## MPSGraphDevice.h
 @objcwrapper MPSGraphDevice <: MPSGraphType
