@@ -10,7 +10,7 @@ module MPSGraph
 
 using ..Metal
 using .MTL
-using .MPS: MPSDataType, MPSMatrix, MPSVector
+using .MPS: MPSDataType, MPSMatrix, MPSVector, MPSShape
 
 using CEnum
 using ObjectiveC, .Foundation
