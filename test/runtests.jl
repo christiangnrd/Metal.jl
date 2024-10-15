@@ -15,6 +15,8 @@ dev = device()
 @show MTL.supports_family(dev, MTL.MTLGPUFamilyApple7)
 @show MTL.supports_family(dev, MTL.MTLGPUFamilyApple8)
 @show MTL.supports_family(dev, MTL.MTLGPUFamilyApple9)
+@show MTL.supports_family(dev, MTL.MTLGPUFamilyMetal3)
+@show Metal.functional()
 @show MTL.MTLCompileOptions().languageVersion
 a = MtlArray([1,2,3])
 @show a
