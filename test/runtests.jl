@@ -2,6 +2,9 @@ using Metal
 
 dev = device()
 
+@show Metal.functional()
+
+if Metal.functional()
 @info dev.name |> String
 @show Metal.macos_version()
 @show Metal.metal_support()
@@ -16,9 +19,9 @@ dev = device()
 @show MTL.supports_family(dev, MTL.MTLGPUFamilyApple8)
 @show MTL.supports_family(dev, MTL.MTLGPUFamilyApple9)
 @show MTL.supports_family(dev, MTL.MTLGPUFamilyMetal3)
-@show Metal.functional()
 @show MTL.MTLCompileOptions().languageVersion
 a = MtlArray([1,2,3])
 @show a
 a .+= 1
 @show a
+end
