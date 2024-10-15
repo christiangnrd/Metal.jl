@@ -1,10 +1,10 @@
 using Metal
 
-dev = device()
 
 @show Metal.functional()
 
 if Metal.functional()
+dev = device()
 @info dev.name |> String
 @show Metal.macos_version()
 @show Metal.metal_support()
