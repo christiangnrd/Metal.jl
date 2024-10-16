@@ -26,10 +26,12 @@ jobs:
           - macos-14
           - windows-latest
         include:
-          - os: macos-14
+          - os: macos-latest
             arch: aarch64
+          - os: macos-latest
+            arch: x64
           - os: windows-latest
-            arch: x64    
+            arch: x64
     steps:
       - uses: actions/checkout@v4.1.7
       - uses: julia-actions/setup-julia@v2
