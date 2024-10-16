@@ -23,7 +23,7 @@ jobs:
           - '1.10'
           # - 'nightly' #TODO: enable once aarch64 nightlies are working
         os:
-          - macos-14
+          - macos-latest
           - windows-latest
         include:
           - os: macos-latest
