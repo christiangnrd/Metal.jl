@@ -1,5 +1,59 @@
 ## kernels
 
+# @objcwrapper immutable=false MPSImageDescriptor <: NSObject
+
+# imageDescriptorWithChannelFormat
+function MPSImageDescriptor(channelFormat, width, height, featureChannels)
+    desc = @objc [MPSImageDescriptor imageDescriptorWithChannelFormat:channelFormat::MPSImageFeatureChannelFormat
+                                          width:width::NSUInteger
+                                          height:height::NSUInteger
+                                          featureChannels:featureChannels::NSUInteger]::id{MPSImageDescriptor}
+    obj = MPSImageDescriptor(desc)
+    finalizer(release, obj)
+    return obj
+end
+function MPSImageDescriptor(channelFormat, width, height, featureChannels, numberOfImages, usage)
+    desc = @objc [MPSImageDescriptor imageDescriptorWithChannelFormat:channelFormat::MPSImageFeatureChannelFormat
+                                          width:width::NSUInteger
+                                          height:height::NSUInteger
+                                          featureChannels:featureChannels::NSUInteger
+                                          numberOfImages:numberOfImages::NSUInteger
+                                          usage:usage::MTL.MTLTextureUsage]::id{MPSImageDescriptor}
+    obj = MPSImageDescriptor(desc)
+    finalizer(release, obj)
+    return obj
+end
+
+# @objcwrapper immutable=false MPSImage <: NSObject
+
+function MPSImage(device::MTLDevice, imageDescriptor)
+    imgaddr = @objc [MPSImage alloc]::id{MPSImage}
+    obj = MPSImage(imgaddr)
+    finalizer(release, obj)
+    @objc [obj::id{MPSImage} initWithDevice:device::id{MTLDevice}
+                                imageDescriptor:imageDescriptor::id{MPSImageDescriptor}]::id{MPSImage}
+    return obj
+end
+
+function MPSImage(texture, featureChannels)
+    imgaddr = @objc [MPSImage alloc]::id{MPSImage}
+    obj = MPSImage(imgaddr)
+    finalizer(release, obj)
+    @objc [obj::id{MPSImage} initWithTexture:texture::id{MTLTexture}
+                                featureChannels:featureChannels::NSUInteger]::id{MPSImage}
+    return obj
+end
+
+function MPSImage(parent::MPSImage, sliceRange, featureChannels)
+    imgaddr = @objc [MPSImage alloc]::id{MPSImage}
+    obj = MPSImage(imgaddr)
+    finalizer(release, obj)
+    @objc [obj::id{MPSImage} initWithParentImage:parent::id{MPSImage}
+                            sliceRange:sliceRange::NSRange
+                            featureChannels:featureChannels::NSUInteger]::id{MPSImage}
+    return obj
+end
+
 # @objcwrapper immutable=false MPSUnaryImageKernel <: MPSKernel
 
 function encode!(cmdbuf::MTLCommandBuffer, kernel::K, sourceTexture::MTLTexture, destinationTexture::MTLTexture) where {K<:MPSUnaryImageKernel}
@@ -52,7 +106,7 @@ end
 
 ## high-level blurring functionality. Interface subject to change
 
-function blur(image, kernel; pixelFormat=MTL.MTLPixelFormatRGBA8Unorm)
+function blur(image, kernel::MPSUnaryImageKernel; pixelFormat=MTL.MTLPixelFormatRGBA8Unorm)
     res = copy(image)
 
     w,h = size(image)
