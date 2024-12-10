@@ -49,6 +49,9 @@ include("datatype.jl")
 include("command_buf.jl")
 include("kernel.jl")
 include("images.jl")
+include("imagefilters.jl")
+
+# high-level wrappers
 include("matrix.jl")
 include("vector.jl")
 include("matrixrandom.jl")
