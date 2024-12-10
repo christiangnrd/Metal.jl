@@ -1,10 +1,94 @@
 ## kernels
 
+@objcwrapper immutable=false MPSImageDescriptor <: NSObject
+
+@objcproperties MPSImageDescriptor begin
+    # Configuring an MPSImageDescriptor
+    @autoproperty width::NSUInteger
+    @autoproperty height::NSUInteger
+    @autoproperty featureChannels::NSUInteger
+    @autoproperty numberOfImages::NSUInteger
+    @autoproperty pixelFormat::MTL.MTLPixelFormat
+    @autoproperty channelFormat::MPSImageFeatureChannelFormat
+    @autoproperty cpuCacheMode::MTL.MTLCPUCacheMode setter=setCpuCacheMode
+    @autoproperty storageMode::MTL.MTLStorageMode setter=setStorageMode
+    @autoproperty usage::MTL.MTLTextureUsage setter=setUsage
+end
+
+# imageDescriptorWithChannelFormat
+function MPSImageDescriptor(channelFormat, width, height, featureChannels)
+    desc = @objc [MPSImageDescriptor imageDescriptorWithChannelFormat:channelFormat::MPSImageFeatureChannelFormat
+                                          width:width::NSUInteger
+                                          height:height::NSUInteger
+                                          featureChannels:featureChannels::NSUInteger]::id{MPSImageDescriptor}
+    obj = MPSImageDescriptor(desc)
+    finalizer(release, obj)
+    return obj
+end
+function MPSImageDescriptor(channelFormat, width, height, featureChannels, numberOfImages, usage)
+    desc = @objc [MPSImageDescriptor imageDescriptorWithChannelFormat:channelFormat::MPSImageFeatureChannelFormat
+                                          width:width::NSUInteger
+                                          height:height::NSUInteger
+                                          featureChannels:featureChannels::NSUInteger
+                                          numberOfImages:numberOfImages::NSUInteger
+                                          usage:usage::MTL.MTLTextureUsage]::id{MPSImageDescriptor}
+    obj = MPSImageDescriptor(desc)
+    finalizer(release, obj)
+    return obj
+end
+
+@objcwrapper immutable=false MPSImage <: NSObject
+
+# Configuring an MPSImage
+@objcproperties MPSImage begin
+    # Configuring an MPSImage
+    @autoproperty device::id{MTLDevice}
+    @autoproperty width::NSUInteger
+    @autoproperty height::NSUInteger
+    @autoproperty featureChannels::NSUInteger
+    @autoproperty numberOfImages::NSUInteger
+    # @autoproperty textureType::MTL.MTLTextureType
+    @autoproperty pixelFormat::MTL.MTLPixelFormat
+    @autoproperty precision::NSUInteger
+    @autoproperty usage::MTL.MTLTextureUsage
+    @autoproperty pixelSize::NSUInteger
+    @autoproperty texture::id{MTL.MTLTexture}
+    @autoproperty label::id{NSString}
+end
+
+function MPSImage(device::MTLDevice, imageDescriptor)
+    imgaddr = @objc [MPSImage alloc]::id{MPSImage}
+    obj = MPSImage(imgaddr)
+    finalizer(release, obj)
+    @objc [obj::id{MPSImage} initWithDevice:device::id{MTLDevice}
+                                imageDescriptor:imageDescriptor::id{MPSImageDescriptor}]::id{MPSImage}
+    return obj
+end
+
+function MPSImage(texture, featureChannels)
+    imgaddr = @objc [MPSImage alloc]::id{MPSImage}
+    obj = MPSImage(imgaddr)
+    finalizer(release, obj)
+    @objc [obj::id{MPSImage} initWithTexture:texture::id{MTLTexture}
+                                featureChannels:featureChannels::NSUInteger]::id{MPSImage}
+    return obj
+end
+
+function MPSImage(parent::MPSImage, sliceRange, featureChannels)
+    imgaddr = @objc [MPSImage alloc]::id{MPSImage}
+    obj = MPSImage(imgaddr)
+    finalizer(release, obj)
+    @objc [obj::id{MPSImage} initWithParentImage:parent::id{MPSImage}
+                            sliceRange:sliceRange::NSRange
+                            featureChannels:featureChannels::NSUInteger]::id{MPSImage}
+    return obj
+end
+
 @objcwrapper immutable=false MPSUnaryImageKernel <: MPSKernel
 
 @objcproperties MPSUnaryImageKernel begin
-    @autoproperty offset::MPSOffset
-    @autoproperty clipRect::MTLRegion
+    @autoproperty offset::MPSOffset setter=setOffset
+    @autoproperty clipRect::MTLRegion setter=setClipRect
     @autoproperty edgeMode::MPSImageEdgeMode setter=setEdgeMode
 end
 
@@ -67,7 +151,7 @@ end
 
 ## high-level blurring functionality. Interface subject to change
 
-function blur(image, kernel; pixelFormat=MTL.MTLPixelFormatRGBA8Unorm)
+function blur(image, kernel::MPSUnaryImageKernel; pixelFormat=MTL.MTLPixelFormatRGBA8Unorm)
     res = copy(image)
 
     w,h = size(image)
