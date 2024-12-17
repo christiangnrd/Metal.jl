@@ -25,13 +25,14 @@ for dim in (:Row, :Column, :FeatureChannels, :FeatureChannelsArgument), func in 
 
     fullfunc = Symbol(:MPSNNReduce, dim, func)
     @eval begin
-        @objcwrapper immutable=false $fullfunc <: MPSNNReduceUnary
-
-        function $fullfunc(device)
-            kernel = @objc [$fullfunc alloc]::id{$fullfunc}
-            obj = $fullfunc(kernel)
+        @objcwrapper $(fullfunc) <: MPSNNReduceUnary
+    end
+    @eval begin
+        function $(fullfunc)(device)
+            kernel = @objc [$(fullfunc) alloc]::id{$(fullfunc)}
+            obj = $(fullfunc)(kernel)
             finalizer(release, obj)
-            @objc [obj::id{$fullfunc} initWithDevice:device::id{MTLDevice}]::id{$fullfunc}
+            @objc [obj::id{$(fullfunc)} initWithDevice:device::id{MTLDevice}]::id{$(fullfunc)}
             return obj
         end
     end
