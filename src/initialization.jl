@@ -58,6 +58,7 @@ function __init__()
 
     @autoreleasepool try
         load_framework("CoreGraphics")
+        load_framework("MetalPerformanceShadersGraph")
         ver = MTL.MTLCompileOptions().languageVersion
         @debug "Successfully loaded Metal; targeting v$ver."
 

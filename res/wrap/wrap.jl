@@ -43,6 +43,12 @@ function main(names=["all"]; sdk_path=SDK_PATH)
         push!(ctxs, tctx)
     end
 
+    if "all" in names || "libmpsgraph" in names || "mpsgraph" in names
+        fwpath = path_to_framework("MetalPerformanceShadersGraph")
+        tctx = wrap("libmpsgraph", joinpath(fwpath, "MetalPerformanceShadersGraph.h"); defines)
+        push!(ctxs, tctx)
+    end
+
     # if "all" in names || "libfoundation" in names || "foundation" in names
     #     fwpath = path_to_framework("Foundation")
     #     tctx = wrap("libfoundation", joinpath(foundation, "Foundation.h");, defines=["__builtin_va_list"])
