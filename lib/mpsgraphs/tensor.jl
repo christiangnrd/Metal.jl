@@ -19,6 +19,12 @@ end
     @autoproperty operation::id{MPSGraphOperation}
     @autoproperty shape::id{MPSShape}
 end
+function Base.size(td::MPSGraphTensor)
+    temp = map(td.shape) do nsnum
+        NSNumber(reinterpret(id{NSNumber}, nsnum)).unsignedIntegerValue |> Int
+    end
+    Tuple(temp)
+end
 
 function placeholderTensor(graph::MPSGraph, shape::Union{Vector, Tuple}, args...)
     mpsshape = convert(MPSShape, shape)
@@ -38,6 +44,12 @@ end
     @autoproperty dataType::MPSDataType
     @autoproperty device::id{MPSGraphDevice}
     @autoproperty shape::id{MPSShape}
+end
+function Base.size(td::MPSGraphTensorData)
+    temp = map(td.shape) do nsnum
+        NSNumber(reinterpret(id{NSNumber}, nsnum)).unsignedIntegerValue |> Int
+    end
+    Tuple(temp)
 end
 
 function MPSGraphTensorData(buffer::MTLBuffer, shape::MPSShape, dataType)
@@ -59,7 +71,8 @@ function MPSGraphTensorData(buffer::MTLBuffer, shape::MPSShape, dataType, rowByt
                                     rowBytes:rowBytes::NSUInteger]::id{MPSGraphTensorData}
     return tensor
 end
-MPSGraphTensorData(matrix::MtlMatrix{T}) where T = MPSGraphTensorData(matrix.data[], convert(MPSShape, size(matrix)), T)
+# MPSGraphTensorData(matrix::MtlMatrix{T}) where T = MPSGraphTensorData(matrix.data[], convert(MPSShape, reverse(size(matrix))), T)
+MPSGraphTensorData(matrix::MtlMatrix) = MPSGraphTensorData(MPSMatrix(matrix))
 
 function MPSGraphTensorData(matrix::MPSMatrix)
     obj = @objc [MPSGraphTensorData alloc]::id{MPSGraphTensorData}
@@ -86,8 +99,8 @@ function MPSGraphTensorData(vector::MPSVector)
     @objc [tensor::id{MPSGraphTensorData} initWithMPSVector:vector::id{MPSVector}]::id{MPSGraphTensorData}
     return tensor
 end
-MPSGraphTensorData(vector::MtlVector{T}) where T = MPSGraphTensorData(vector.data[], convert(MPSShape, size(vector)), T)
-# MPSGraphTensorData(vector::MtlVector) = MPSGraphTensorData(MPSVector(vector))
+# MPSGraphTensorData(vector::MtlVector{T}) where T = MPSGraphTensorData(vector.data[], convert(MPSShape, size(vector)), T)
+MPSGraphTensorData(vector::MtlVector) = MPSGraphTensorData(MPSVector(vector))
 
 # rank must be between 1 and 16 inclusive
 function MPSGraphTensorData(vector::MPSVector, rank)
