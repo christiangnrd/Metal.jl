@@ -50,6 +50,8 @@ include("compiler/reflection.jl")
 # libraries
 include("../lib/mps/MPS.jl")
 export MPS
+include("../lib/mpsgraphs/MPSGraphs.jl")
+export MPSGraphs
 
 # array implementation
 include("utilities.jl")
