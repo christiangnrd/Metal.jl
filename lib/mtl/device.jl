@@ -4,7 +4,7 @@
 
 export MTLDevice, MTLCreateSystemDefaultDevice, devices
 
-@objcwrapper MTLDevice <: NSObject
+# @objcwrapper MTLDevice <: NSObject
 
 @objcproperties MTLDevice begin
     ## device inspection
