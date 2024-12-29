@@ -243,7 +243,7 @@ end
 
 export MPSNDArrayUnaryKernel
 
-# @objcwrapper immutable=false MPSNDArrayUnaryKernel <: MPSNDArrayMultiaryBase
+# @objcwrapper immutable=false MPSNDArrayUnaryKernel <: MPSNDArrayMultiaryKernel
 
 function MPSNDArrayUnaryKernel(device)
     kernel = @objc [MPSNDArrayUnaryKernel alloc]::id{MPSNDArrayUnaryKernel}
@@ -278,7 +278,7 @@ end
 
 export MPSNDArrayBinaryKernel
 
-# @objcwrapper immutable=false MPSNDArrayBinaryKernel <: MPSNDArrayMultiaryBase
+# @objcwrapper immutable=false MPSNDArrayBinaryKernel <: MPSNDArrayMultiaryKernel
 
 function MPSNDArrayBinaryKernel(device)
     kernel = @objc [MPSNDArrayBinaryKernel alloc]::id{MPSNDArrayBinaryKernel}
