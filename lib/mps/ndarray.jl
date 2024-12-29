@@ -4,7 +4,7 @@
 
 export MPSNDArrayDescriptor
 
-@objcwrapper immutable=false MPSNDArrayDescriptor <: NSObject
+# @objcwrapper immutable=false MPSNDArrayDescriptor <: NSObject
 
 @objcproperties MPSNDArrayDescriptor begin
     @autoproperty dataType::MPSDataType setter=setDataType
@@ -47,7 +47,7 @@ end
 
 export MPSNDArray
 
-@objcwrapper immutable=false MPSNDArray <: NSObject
+# @objcwrapper immutable=false MPSNDArray <: NSObject
 
 @static if Metal.macos_version() >= v"15"
     @objcproperties MPSNDArray begin
@@ -79,7 +79,7 @@ function Base.size(ndarr::MPSNDArray)
     Tuple([Int(lengthOfDimension(ndarr,i)) for i in 0:ndims-1])
 end
 
-@objcwrapper immutable=false MPSTemporaryNDArray <: MPSNDArray
+# @objcwrapper immutable=false MPSTemporaryNDArray <: MPSNDArray
 
 @objcproperties MPSTemporaryNDArray begin
     @autoproperty readCount::NSUInteger setter=setReadCount
@@ -203,11 +203,11 @@ synchronizeOnCommandBuffer(ndarr::MPSNDArray, q::MTLCommandBuffer) =
 
 export MPSNDArrayMultiaryBase
 
-@objcwrapper immutable=false MPSNDArrayMultiaryBase <: MPSKernel
+# @objcwrapper immutable=false MPSNDArrayMultiaryBase <: MPSKernel
 
 export MPSNDArrayMultiaryKernel
 
-@objcwrapper immutable=false MPSNDArrayMultiaryKernel <: MPSNDArrayMultiaryBase
+# @objcwrapper immutable=false MPSNDArrayMultiaryKernel <: MPSNDArrayMultiaryBase
 
 function MPSNDArrayMultiaryKernel(device, sourceCount)
     kernel = @objc [MPSNDArrayMultiaryKernel alloc]::id{MPSNDArrayMultiaryKernel}
@@ -243,7 +243,7 @@ end
 
 export MPSNDArrayUnaryKernel
 
-@objcwrapper immutable=false MPSNDArrayUnaryKernel <: MPSNDArrayMultiaryBase
+# @objcwrapper immutable=false MPSNDArrayUnaryKernel <: MPSNDArrayMultiaryBase
 
 function MPSNDArrayUnaryKernel(device)
     kernel = @objc [MPSNDArrayUnaryKernel alloc]::id{MPSNDArrayUnaryKernel}
@@ -278,7 +278,7 @@ end
 
 export MPSNDArrayBinaryKernel
 
-@objcwrapper immutable=false MPSNDArrayBinaryKernel <: MPSNDArrayMultiaryBase
+# @objcwrapper immutable=false MPSNDArrayBinaryKernel <: MPSNDArrayMultiaryBase
 
 function MPSNDArrayBinaryKernel(device)
     kernel = @objc [MPSNDArrayBinaryKernel alloc]::id{MPSNDArrayBinaryKernel}
@@ -315,7 +315,7 @@ end
 #                                      outputStateIsTemporary:outputStateIsTemporary::Bool]::MPSNDArray
 # end
 
-@objcwrapper immutable=false MPSNDArrayMatrixMultiplication <: MPSNDArrayMultiaryKernel
+# @objcwrapper immutable=false MPSNDArrayMatrixMultiplication <: MPSNDArrayMultiaryKernel
 
 @objcproperties MPSNDArrayMatrixMultiplication begin
     @autoproperty alpha::Float64 setter=setAlpha
