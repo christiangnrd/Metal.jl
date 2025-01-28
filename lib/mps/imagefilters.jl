@@ -12,24 +12,11 @@ end
 ## morphological image filters
 
 # The following two filter definitions are defined with the MPSImageBox-like filters
-@objcwrapper immutable=false MPSImageAreaMax <: MPSUnaryImageKernel
-@objcwrapper immutable=false MPSImageAreaMin <: MPSImageAreaMax
+# @objcwrapper immutable=false MPSImageAreaMax <: MPSUnaryImageKernel
+# @objcwrapper immutable=false MPSImageAreaMin <: MPSImageAreaMax
 
-# Also defines MPSImageAreaMin properties
-@objcproperties MPSImageAreaMax begin
-    @autoproperty kernelHeight::Int
-    @autoproperty kernelWidth::Int
-end
-
-
-@objcwrapper immutable=false MPSImageDilate <: MPSUnaryImageKernel
-@objcwrapper immutable=false MPSImageErode <: MPSImageDilate
-
-# Also defines MPSImageErode properties
-@objcproperties MPSImageDilate begin
-    @autoproperty kernelHeight::Int
-    @autoproperty kernelWidth::Int
-end
+# @objcwrapper immutable=false MPSImageDilate <: MPSUnaryImageKernel
+# @objcwrapper immutable=false MPSImageErode <: MPSImageDilate
 
 for filt in (:MPSImageDilate, :MPSImageErode)
     @eval begin
@@ -55,13 +42,7 @@ end
 
 export MPSImageConvolution
 
-@objcwrapper immutable=false MPSImageConvolution <: MPSUnaryImageKernel
-
-@objcproperties MPSImageConvolution begin
-    @autoproperty kernelHeight::Int
-    @autoproperty kernelWidth::Int
-    @autoproperty bias::Float32
-end
+# @objcwrapper immutable=false MPSImageConvolution <: MPSUnaryImageKernel
 
 MPSImageConvolution(dev::MTLDevice, kernelWidth::Integer, kernelHeight::Integer, weights::AbstractMatrix{Float32}) =
     MPSImageConvolution(dev, kernelWidth, kernelHeight, view(weights,:))
@@ -79,11 +60,7 @@ end
 
 export MPSImageMedian
 
-@objcwrapper immutable=false MPSImageMedian <: MPSUnaryImageKernel
-
-@objcproperties MPSImageMedian begin
-    @autoproperty kernelDiameter::Int
-end
+# @objcwrapper immutable=false MPSImageMedian <: MPSUnaryImageKernel
 
 function MPSImageMedian(dev::MTLDevice, kernelDiameter::Integer)
     _check_kernel_diameter(kernelDiameter)
@@ -98,8 +75,8 @@ maxKernelDiameter() = @objc [MPSImageMedian maxKernelDiameter]::Int
 minKernelDiameter() = @objc [MPSImageMedian minKernelDiameter]::Int
 
 
-@objcwrapper immutable=false MPSImageBox <: MPSUnaryImageKernel
-@objcwrapper immutable=false MPSImageTent <: MPSImageBox
+# @objcwrapper immutable=false MPSImageBox <: MPSUnaryImageKernel
+# @objcwrapper immutable=false MPSImageTent <: MPSImageBox
 for filt in (:MPSImageBox, :MPSImageTent, :MPSImageAreaMin, :MPSImageAreaMax)
     @eval begin
         export $filt
@@ -121,7 +98,7 @@ end
 
 export MPSImageGaussianBlur
 
-@objcwrapper immutable=false MPSImageGaussianBlur <: MPSUnaryImageKernel
+# @objcwrapper immutable=false MPSImageGaussianBlur <: MPSUnaryImageKernel
 
 function MPSImageGaussianBlur(dev::MTLDevice, sigma::Real)
     kernel = @objc [MPSImageGaussianBlur alloc]::id{MPSImageGaussianBlur}
@@ -135,19 +112,13 @@ end
 
 ## image reduction filters #
 
-@objcwrapper immutable=false MPSImageReduceUnary <: MPSUnaryImageKernel
-
-@objcproperties MPSImageReduceUnary begin
-    @autoproperty clipRect::MTLRegion
-end
+# @objcwrapper immutable=false MPSImageReduceUnary <: MPSUnaryImageKernel
 
 # Implement the MPSImageReduce kernels
 for dim in (:Row, :Column), func in (:Max, :Min, :Sum, :Mean)
     fullfunc = Symbol(:MPSImageReduce, dim, func)
     @eval begin
         export $fullfunc
-
-        @objcwrapper immutable=false $fullfunc <: MPSImageReduceUnary
     end
     @eval begin
         function $fullfunc(dev)
@@ -163,25 +134,13 @@ end
 
 ## image arithmetic filters
 
-@objcwrapper immutable=false MPSImageArithmetic <: MPSBinaryImageKernel
-
-@objcproperties MPSImageArithmetic begin
-    @autoproperty bias::Float32 setter=setBias
-    @autoproperty primaryScale::Float32 setter=setPrimaryScale
-    @autoproperty primaryStrideInPixels::MTLSize setter=setPrimaryStrideInPixels
-    @autoproperty secondaryScale::Float32 setter=setSecondaryScale
-    @autoproperty secondaryStrideInPixels::MTLSize setter=setSecondaryStrideInPixels
-    @autoproperty minimumValue::Float32 setter=setMinimumValue
-    @autoproperty maximumValue::Float32 setter=setMaximumValue
-end
+# @objcwrapper immutable=false MPSImageArithmetic <: MPSBinaryImageKernel
 
 # Implement the MPSImageArithmetic kernels
 for func in (:Add, :Subtract, :Multiply, :Divide)
     fullfunc = Symbol(:MPSImage, func)
     @eval begin
         export $fullfunc
-
-        @objcwrapper immutable=false $fullfunc <: MPSImageArithmetic
     end
     @eval begin
         function $fullfunc(dev)
