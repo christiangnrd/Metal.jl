@@ -10,7 +10,7 @@ module MPSGraphs
 
 using ..Metal
 using .MTL
-using .MPS: MPSDataType, MPSMatrix, MPSVector, MPSShape, MPSNDArray
+using .MPS: MPSDataType, MPSMatrix, MPSVector, MPSShape, MPSNDArray, exportToMtlArray!
 
 using CEnum
 using ObjectiveC, .Foundation, .Dispatch
@@ -21,5 +21,11 @@ include("core.jl")
 include("tensor.jl")
 include("operations.jl")
 include("random.jl")
+
+include("matmul.jl")
+
+using LinearAlgebra
+using LinearAlgebra: MulAddMul, wrap
+using GPUArrays
 
 end

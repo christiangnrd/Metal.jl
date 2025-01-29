@@ -1,13 +1,7 @@
 using LinearAlgebra
 using LinearAlgebra: MulAddMul, wrap
-
-# Valid combination of input (A and B matrices) and output (C) types
-const MPS_VALID_MATMUL_TYPES =
-    [(Int8, Float16),
-     (Int8, Float32),
-     (Int16, Float32),
-     (Float16, Float16),
-     (Float32, Float32)]
+using .MPS: MPS_VALID_MATMUL_TYPES, MPS_VALID_MATVECMUL_TYPES, MtlFloat
+using .MPSGraphs: graph_matmul!, graph_matvecmul!
 
 LinearAlgebra.generic_matmatmul!(C::MtlMatrix, tA, tB, A::MtlMatrix, B::MtlMatrix, _add::MulAddMul) =
     LinearAlgebra.generic_matmatmul!(C, tA, tB, A, B, _add.alpha, _add.beta)
@@ -39,18 +33,13 @@ LinearAlgebra.generic_matmatmul!(C::MtlMatrix, tA, tB, A::MtlMatrix, B::MtlMatri
     typC = eltype(C)
 
     # If possible, dispatch to performance shaders
-    if is_supported(device()) &&
+    if MPS.is_supported(device()) &&
        typA == typB && (typA, typC) in MPS_VALID_MATMUL_TYPES
-        matmul!(C, A, B, alpha, beta, transA, transB)
+        graph_matmul!(C, A, B, alpha, beta, transA, transB)
     else
         GPUArrays.generic_matmatmul!(C, wrap(A, tA), wrap(B, tB), alpha, beta)
     end
 end
-
-const MPS_VALID_MATVECMUL_TYPES =
-    [(Float16, Float16),
-     (Float16, Float32),
-     (Float32, Float32)]
 
 LinearAlgebra.generic_matvecmul!(C::MtlVector, tA::AbstractChar, A::MtlMatrix, B::MtlVector, _add::MulAddMul) =
     LinearAlgebra.generic_matvecmul!(C, tA, A, B, _add.alpha, _add.beta)
@@ -82,9 +71,9 @@ LinearAlgebra.generic_matvecmul!(C::MtlVector, tA::AbstractChar, A::MtlMatrix, B
     typC = eltype(C)
 
     # If possible, dispatch to performance shaders
-    if is_supported(device()) &&
+    if MPS.is_supported(device()) &&
         typA == typB && (typA, typC) in MPS_VALID_MATVECMUL_TYPES
-        matvecmul!(C, A, B, alpha, beta, transA)
+        graph_matvecmul!(C, A, B, alpha, beta, transA)
     else
         GPUArrays.generic_matmatmul!(C, wrap(A, tA), B, alpha, beta)
     end

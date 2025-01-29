@@ -55,6 +55,9 @@ export MPS
 include("../lib/mpsgraphs/MPSGraphs.jl")
 export MPSGraphs
 
+# LinearAlgebra
+include("linalg.jl")
+
 # array implementation
 include("utilities.jl")
 include("broadcast.jl")
