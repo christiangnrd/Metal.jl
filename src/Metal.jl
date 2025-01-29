@@ -73,6 +73,93 @@ export MetalBackend
 
 include("deprecated.jl")
 
+#=
+using Metal, GPUArrays
+using LinearAlgebra: wrap
+function metalpeakflops(
+                    n::Integer=4096,
+                    dtype::DataType=Float32,
+                    ntrials::Integer=3)
+    t = Base.zeros(Float64, ntrials)
+    for i=1:ntrials
+        c = mtl(zeros(dtype,n,n))
+        a = mtl(ones(dtype,n,n))
+        b = mtl(ones(dtype,n,n))
+        t[i] = @elapsed Metal.@sync GPUArrays.generic_matmatmul!(c,wrap(a,'N'),wrap(b,'N'),1,0)
+        @assert all(c .== n)
+    end
+
+    return 2*Float64(n)^3 / minimum(t)
+end
+function mpspeakflops(
+        n::Integer=4096,
+        dtype::DataType=Float32,
+        ntrials::Integer=3)
+    t = Base.zeros(Float64, ntrials)
+    for i=1:ntrials
+        c = mtl(zeros(dtype,n,n))
+        a = mtl(ones(dtype,n,n))
+        b = mtl(ones(dtype,n,n))
+        t[i] = @elapsed Metal.@sync MPS.matmul!(c,a,b)
+        @assert all(c .== n)
+    end
+
+    return 2*Float64(n)^3 / minimum(t)
+end
+function graphpeakflops(
+        n::Integer=4096,
+        dtype::DataType=Float32,
+        ntrials::Integer=3)
+    t = Base.zeros(Float64, ntrials)
+    for i=1:ntrials
+        c = mtl(zeros(dtype,n,n))
+        a = mtl(ones(dtype,n,n))
+        b = mtl(ones(dtype,n,n))
+        t[i] = @elapsed Metal.@sync MPSGraphs.graph_matmul!(c,a,b)
+        @assert all(c .== n)
+    end
+
+    return 2*Float64(n)^3 / minimum(t)
+end
+
+
+function mpsmain(T=Float32, N=10000)
+    a = Metal.rand(T, N, N)
+    b = Metal.rand(T, N, N)
+    synchronize()
+
+    for i in 1:20
+        # @autoreleasepool begin
+        begin
+            d = Metal.zeros(T, size(a))
+            @time "Iteration $i" Metal.@sync MPS.matmul!(d, a, b, #=alpha=#true, #=beta=#false,
+                        #=transpose_a=#false, #=transpose_b=#false)
+            if any(isnan.(Array(d)))
+                @info "NaN in iteration $i"
+            end
+        end
+    end
+end
+
+function graphmain(T=Float32, N=10000)
+    a = Metal.rand(T, N, N)
+    b = Metal.rand(T, N, N)
+    synchronize()
+
+    for i in 1:20
+        # @autoreleasepool begin
+        begin
+            d = Metal.zeros(T, size(a))
+            @time "Iteration $i" Metal.@sync MPSGraphs.graph_matmul!(d, a, b, #=alpha=#true, #=beta=#false,
+                        #=transpose_a=#false, #=transpose_b=#false)
+            if any(isnan.(Array(d)))
+                @info "NaN in iteration $i"
+            end
+        end
+    end
+end
+
+=#
 include("precompile.jl")
 
 end # module
