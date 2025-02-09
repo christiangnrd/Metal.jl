@@ -33,12 +33,6 @@ function Base.size(td::MPSGraphTensorData)
     end
     Tuple(temp)
 end
-function Base.size(td::MPSGraphTensorData)
-    temp = map(td.shape) do nsnum
-        NSNumber(reinterpret(id{NSNumber}, nsnum)).unsignedIntegerValue |> Int
-    end
-    Tuple(temp)
-end
 
 function MPSGraphTensorData(buffer::MTLBuffer, shape::MPSShape, dataType)
     obj = @objc [MPSGraphTensorData alloc]::id{MPSGraphTensorData}
