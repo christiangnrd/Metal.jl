@@ -12,12 +12,6 @@ function Base.size(td::MPSGraphTensor)
     end
     Tuple(temp)
 end
-function Base.size(td::MPSGraphTensor)
-    temp = map(td.shape) do nsnum
-        NSNumber(reinterpret(id{NSNumber}, nsnum)).unsignedIntegerValue |> Int
-    end
-    Tuple(temp)
-end
 
 function placeholderTensor(graph::MPSGraph, shape::Union{Vector, Tuple}, args...)
     mpsshape = convert(MPSShape, shape)
