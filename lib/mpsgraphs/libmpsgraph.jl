@@ -103,7 +103,7 @@ end
     @autoproperty operation::id{MPSGraphOperation}
 end
 
-@objcwrapper immutable = true MPSGraphTensorData <: MPSGraphObject
+@objcwrapper immutable = false MPSGraphTensorData <: MPSGraphObject
 
 @objcproperties MPSGraphTensorData begin
     @autoproperty shape::id{MPSShape}

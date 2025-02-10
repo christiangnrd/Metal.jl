@@ -55,6 +55,7 @@ function MPSGraphTensorData(buffer::MTLBuffer, shape::MPSShape, dataType, rowByt
 end
 # MPSGraphTensorData(matrix::MtlMatrix{T}) where T = MPSGraphTensorData(matrix.data[], convert(MPSShape, reverse(size(matrix))), T)
 MPSGraphTensorData(matrix::MtlMatrix) = MPSGraphTensorData(MPSMatrix(matrix))
+MPSGraphTensorData(arr::MtlArray{T,3}) where T = MPSGraphTensorData(MPSMatrix(arr))
 
 function MPSGraphTensorData(matrix::MPSMatrix)
     obj = @objc [MPSGraphTensorData alloc]::id{MPSGraphTensorData}
