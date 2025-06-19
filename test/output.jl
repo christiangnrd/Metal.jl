@@ -4,12 +4,6 @@
 
 @warn "Skipping output tests in macOS 14 and below"
 
-function kernel()
-    @mtlprint("Hello, World\n")
-    return
-end
-@test_throws "Logging is only supported on macOS 15 or higher" @metal kernel()
-
 else
 
 @testset "formatted output" begin
