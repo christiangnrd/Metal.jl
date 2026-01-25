@@ -1,3 +1,6 @@
+using Pkg
+Pkg.add(url="https://github.com/christiangnrd/ParallelTestRunner.jl", rev="total_time")
+
 using Metal
 using ParallelTestRunner
 
