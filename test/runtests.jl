@@ -90,16 +90,21 @@ if filter_tests!(testsuite, args)
     end
 end
 
-# workers to run tests on
-function test_worker(name)
-    if name == "capturing"
-        return addworker(env=["METAL_CAPTURE_ENABLED"=>"1"])
-    end
+# code to run in each test's sandbox module before running the test
 
-    return nothing
+init_worker_code = quote
+    using Metal, Adapt, ObjectiveC, ObjectiveC.Foundation, BFloat16s
+
+    import GPUArrays
+    include($gpuarrays_testsuite)
+
+    const eltypes = [Int16, Int32, Int64,
+                    Complex{Int16}, Complex{Int32}, Complex{Int64},
+                    Float16, Float32,
+                    ComplexF16, ComplexF32]
+    TestSuite.supported_eltypes(::Type{<:MtlArray}) = eltypes
 end
 
-# code to run in each test's sandbox module before running the test
 init_code = quote
     using Metal, Adapt, ObjectiveC, ObjectiveC.Foundation, BFloat16s
 
@@ -109,15 +114,11 @@ init_code = quote
 
     const capturing = parse(Int, get(ENV, "METAL_CAPTURE_ENABLED", "0")) > 0
 
-    import GPUArrays
-    include($gpuarrays_testsuite)
+    # import GPUArrays
+    # include($gpuarrays_testsuite)
+    # testf(f, xs...; kwargs...) = TestSuite.compare(f, MtlArray, xs...; kwargs...)
+    import Main: TestSuite
     testf(f, xs...; kwargs...) = TestSuite.compare(f, MtlArray, xs...; kwargs...)
-
-    const eltypes = [Int16, Int32, Int64,
-                     Complex{Int16}, Complex{Int32}, Complex{Int64},
-                     Float16, Float32,
-                     ComplexF16, ComplexF32]
-    TestSuite.supported_eltypes(::Type{<:MtlArray}) = eltypes
 
     # NOTE: based on test/pkg.jl::capture_stdout, but doesn't discard exceptions
     macro grab_output(ex)
@@ -153,4 +154,14 @@ init_code = quote
     end
 end
 
-runtests(Metal, args; testsuite, init_code, test_worker)
+# workers to run tests on
+function test_worker(name)
+    if name == "capturing"
+        return addworker(; env=["METAL_CAPTURE_ENABLED"=>"1"], init_worker_code)
+    end
+
+    return nothing
+end
+
+runtests(Metal, args; testsuite, init_worker_code, init_code, test_worker)
+# runtests(Metal, args; testsuite, init_code, test_worker)
